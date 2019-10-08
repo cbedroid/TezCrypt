@@ -14,7 +14,7 @@ from tezcrypt import Encryptor
 ```
 ## Key
 A password key is required to use this program.
-Key must be 8 to 24 character long 
+Key must be 8 to 24 characters long 
 - password are case sensitive. 
 - Symbols and numbers are supported
 - 8 to 24 characters long ( cmdline only)
@@ -25,14 +25,14 @@ mykey = "secretkey"
 crypt = Encryptor(key=mykey)
 ```
 Once initialized,  method `encrypt()` or `decrypt()` can be called with parameters  'data' and 'outfile'. 
-The `data` argument is the name of the file you want to decrypt or encrypt. It must be called (required). The `outfile` argument is optional.It is is the name of the file you want save the results.
+The `data` argument is the name of the file you want to decrypt or encrypt. It must be called (required). The `outfile` argument is optional.It is the name of the file you want save the results.
 #### If the outfile is Not supplied, the infile will be overwritten!
 - data - input file to encrypt or decrypt 
 - outfile - output file to save the results 
 
 ```python
 Infile = "important.txt"
-crypt.encrypt(date=infile)
+crypt.encrypt(data=infile)
 #infile will be overwritten
 
 newfile = "important_encrypted.txt"
@@ -41,16 +41,16 @@ crypt.encrypt(data=infile, outfile=newfile)
 ```
 # Cmdline
 #### Optional,but Not recommended
- ##### <sup>Save an environment variable named "MYCRYPT='path_to_recovery_file'" for password recovery. This is optional, it save all password to a file in case user forgets encryption or decryptio key.This is not recommended, because it can cause security risk if attacker find password.</sup>
+ ##### <sup>Save an environment variable named "MYCRYPT=path_to_recovery_file" for password recovery. This is optional, it save all password to a file in case user forgets encryption or decryptio key.This is not recommended, because it can cause security risk if attacker find password.</sup>
 
 
 TezCrypt can also be used as a cmdline program.
-For linux distribution, it's best to save tezcrypt to /usr/bin/. Then add  a shebang line to your python executable to the first line of "tezcrypt.py"
+For linux distribution, it's best to save tezcrypt to /usr/bin/. Then add  a shebang line with your python executable path to the first line of "tezcrypt.py"
 
 If you are adding a shebang line, then  change "tezcrypt.py" to "tezcrypt"
 > change tezcrypt.py   -->   tezcrypt 
 
-If using python 3 then  python3 will be your python executable. Add either one below to the first line of "tezcrypy"
+If using python 3, then  python3 will be your python executable. Add either one below to the first line of "tezcrypy"
 
 > #!/usr/bin/env python 
 #### Or 
