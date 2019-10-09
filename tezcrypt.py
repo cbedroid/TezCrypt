@@ -1,4 +1,3 @@
-
 __author__ = "Cornelius Brooks"
 __created__ = "Oct 3, 2019"
 __description__ = "File encryptor/decryptor"
@@ -18,7 +17,6 @@ from functools import wraps
 from platform import system
 from time import sleep
 
-
 if system() == 'Windows':
     # getpass doesn't work properly on Windows
     # with getpass, so we will create our own bypass
@@ -35,7 +33,7 @@ class EncryptorError(Exception):
 
 class Encryptor():
     """Encryptor is a file encryption program that 
-    encrypt and decrypt files"""
+        encrypt and decrypt files"""
 
     def __init__(self, key):
         key = str(key).strip()
@@ -49,30 +47,33 @@ class Encryptor():
         if hasattr(self, "_key"):
             return self._key
 
+
     @key.setter
     def key(self, key):
-        '''Sets key or password value'''
+        '''Sets password key value
+           @@params: key - plain text password 
+        '''
+
         key = str(key).strip()
         print("Key:", key)
         self._key = key
         self._cipher = blowfish.Cipher(key.encode("ascii"))
 
+
     def _handler(f):
         """ Read input file and return its data"""
         @wraps(f)
         def inner(self, infile, outfile=None, alter=False):
-
             if not os.path.isfile(infile):
                 print("File not found:", infile)
                 return
 
             self.infile = infile  # capture infile name incase outfile is not supplied
-
             name_of_f = f.__name__
             mode = 'rb' if 'de' in name_of_f else 'r'
             try:
                 with open(infile, mode) as inf:
-                    data = inf.read().strip()
+                    data = inf.read()
                 self._test_strain = data
             except UnicodeDecodeError as e:
                 print('\t-- Seem like %s is already Encrypted' % infile)
@@ -80,20 +81,21 @@ class Encryptor():
             return f(self, data, outfile, alter)
         return inner
 
+
     @_handler
     def encrypt(self, infile, outfile, alter):
         """Encrypt files using blowfish algorithm
             @@params: infile - input file name
-                      outfile - file to save the encrypted data
-                      alter - "decrypt" or "encrypt" file name (see alter_name())
+            @@params: outfile - file to save the encrypted data
+            @@params: alter - "decrypt" or "encrypt" file name (see alter_name())
        """
         data = self._encrypt(infile)
         self._write_output(data, outfile, mode=alter)
 
+
     def _encrypt(self, data, add_padding=True):
         if not data:
             return
-
         try:
             self._type = 'Encryption'
             pad_size = 8
@@ -101,26 +103,27 @@ class Encryptor():
             padding = (chr(padding)*padding).encode('ascii')
             data = data.encode('utf-8')
             data = data + padding
-
             data = b"".join(self._cipher.encrypt_ecb(data))
         except Exception as e:
             print("ERROR:", e)
+
         if self._backup and self._backup != "not set":
             with open(self._backup, "a") as k:
                 stored = "%s --> %s\n" % (self.infile, self._key)
                 k.write(stored)
         return data
 
+
     @_handler
     def decrypt(self, infile, outfile, alter=False):
         """Decrypt files using blowfish algorithm.
             @@params: infile - input file name
-                      outfile - file to save the decrypted data
-                      alter - "decrypt" or "encrypt" file name (see alter_name())
-
+            @@params: outfile - file to save the decrypted data
+            @@params: alter - "decrypt" or "encrypt" file name (see alter_name())
        """
         data = self._decrypt(infile)
         self._write_output(data, outfile, mode=alter)
+
 
     def _decrypt(self, data, remove_padding=True):
         if not data:
@@ -129,6 +132,8 @@ class Encryptor():
             self._type = 'Decryption'
             data = b"".join(self._cipher.decrypt_ecb(data))
         except ValueError as e:
+            data = "".join(self._cipher.decrypt_ecb(data))
+        except:
             print('\t-- Seem like %s is already Decrypted' % self.infile)
             return
         try:
@@ -142,7 +147,8 @@ class Encryptor():
         except ValueError as e:
             print('\n\t -- Invalid Decryption key --')
             return
-        return data
+        return data.decode('utf-8')
+
 
     def _write_output(self, data, outfile=None, mode=False):
         """Creates an output file to save results"""
@@ -154,19 +160,18 @@ class Encryptor():
             outfile = self.infile
             print('\t-- Saving outfile as %s --' % outfile)
         try:  # testing file written correctly
-            with open("___temp___", "wb") as nf:
+            with open("___temp___", "w") as nf:
                 nf.write(data)
+                write_mode = "w"
         except:
-            print("\nError writing file")
-            return
+            write_mode = "wb"
 
-        with open(outfile, "wb") as nf:
+        with open(outfile, write_mode) as nf:
             nf.write(data)
         os.remove("___temp___")
-
         self.alter_name(outfile, mode)
-
         print("Writing %s Done" % self._type)
+
 
     def alter_name(self, name, mode=False):
         '''Encrypt or Decrypt file name '
@@ -180,13 +185,12 @@ class Encryptor():
             return
 
         path, _name = os.path.split(name)
-
         try:
             if mode.lower().strip() == 'encrypt':
                 result = base64.b16encode(self._encrypt(_name)).decode('ascii')
             else:
                 result = self._decrypt(base64.b16decode(
-                    _name.encode('ascii'))).decode('utf-8')
+                    _name.encode('ascii')))
         except Exception as e:
             print(e)
             return
@@ -247,7 +251,6 @@ def perfect_pwd(key=None, need_verify=True):
             max_retry -= 1
             return perfect_pwd(key=None, need_verify=nv)
         return key
-
     return key
 
 
@@ -268,9 +271,8 @@ def main():
                       action='store_true')
     dore.add_argument('-d', "--decrypt", help='Decrypt file',
                       action='store_true')
-    #dore.add_argument('-f','--folder',help='Full folder Encryptioning Decryptioning ',action='store_false')
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     if args:
         infile = args.infile
         encrypt = args.encrypt
@@ -333,7 +335,6 @@ def main():
                 elif encrypt:
                     print('\nEncrypting %s ....' % x)
                     TezCrypt.encrypt(x, outfile, alter)
-
         else:
             print('\n\t-- Must specify an input file to begin --')
             print(parser.print_help())
