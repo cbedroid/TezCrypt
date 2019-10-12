@@ -2,7 +2,6 @@ __author__ = "Cornelius Brooks"
 __created__ = "Oct 3, 2019"
 __description__ = "File encryptor/decryptor"
 
-
 import os
 import sys
 import re
@@ -31,6 +30,30 @@ class EncryptorError(Exception):
     pass
 
 
+class Error():
+    '''Print warning and error message to user screen '''
+    @staticmethod
+    def display(msg,obj='  '):
+        errors = { 'ENCRYPT': 'Seems like %s is already encrypted',
+                   'DECRYPT': 'Seems like %s is arleady decrypted',
+                   'NOFILE' : '%s file not found!',
+                   'WRITING': 'Error while writing %s. Rolling back file ....',
+                   'KEY'    : 'Invalid Key %s',
+                   'ALTER'  : 'ERROR altering file name %s' , 
+                   'PWD'    : 'Password is %s .. Try again --',
+                   'NOMATCH': 'Password doesnt match.. Try again %s',
+                   'ATTEMPTS':'Too many Invalid password.. Goodbye %s',
+                   'NOPWD'  : ' You must enter password %s',
+                   'FILE'  : 'No files found in directory: %s',
+                   'FNAME' : 'Invalid file name: %s',
+                   'DORF'  : 'Invalid file or folder: %s is not a folder --',
+                   'MODE': 'Invalid Mode\nPlease choose either decrypt or encrypt %s',
+                }
+        error = errors.get(msg)
+        if error:
+            print('\n\t-- '+ error%obj +' -- ')
+
+
 class Encryptor():
     """Encryptor is a file encryption program that 
         encrypt and decrypt files"""
@@ -38,8 +61,10 @@ class Encryptor():
     def __init__(self, key):
         key = str(key).strip()
         self._key = key
+        self._mode = 'unknown'
         self._backup = os.environ.get("MYCRYPT")
         self._cipher = blowfish.Cipher(key.encode("ascii"))
+        
 
     @property
     def key(self):
@@ -53,30 +78,108 @@ class Encryptor():
         '''Sets password key value
            @@params: key - plain text password 
         '''
-
         key = str(key).strip()
         print("Key:", key)
         self._key = key
         self._cipher = blowfish.Cipher(key.encode("ascii"))
 
 
+    def _is_encrypted(self,raw_data):
+        '''Test infile file and data type
+            returns False if file not encrypted
+            returns True if file is encrypted 
+        '''
+        # if base64.b64decode throw error then the file is not encrypt 
+        try:
+            base64.b64decode(raw_data)
+        except base64.binascii.Error as e:
+            if 'padding' in str(e): #padding error then the file is not encrypt
+                return 0
+            else:
+                return -1
+        else:
+            return 1
+
+
+    @staticmethod
+    def read_file(file=None,mode='r'):
+        ''' Read infile and return it data '''
+        with open(file,mode) as r:
+            return r.read()
+
+    @staticmethod
+    def _test_mode(file=None):
+        ''' test the data type and return the IO mode type'''
+        # we want to test 'rb' mode first since 'r' will not throw error 
+        # for bytes or string
+        if not file:
+            raise FileNotFoundError('No File was entered')
+        try:
+            with open(file,'rb') as r:
+                r.read()
+            return 'rb'
+        except:
+           return 'r'
+        
+    def _encryptorType(self,caller):
+        '''User Encyption Type: 
+            return whether user is decrypting or encrypting 
+            params: caller - function name (en|decrypting function name)
+        '''
+        if 'de' in caller:
+            return False  #Encyptor.decrypt function called 
+        else:
+            return True   #Encyptor.encrypt function called 
+
+
+        
+    def _found_stamp(self,data):
+        ''' This function check if file was encrypted or decrypted
+             by checking the last three (3) bytes or string in infile
+            -returns: False if file is not encrypted 
+                      True if file is encrypted 
+        '''
+        stamps =['ENR','ENB',b'ENR',b'ENB']
+        try:
+            if any(x == data[-3:] for x in stamps):
+                return True
+        except Exception as e:
+            pass
+
+
     def _handler(f):
-        """ Read input file and return its data"""
+        """ Read input file and determine the algorithm ro handle its data 
+            return:  IO data from infile 
+        """
         @wraps(f)
         def inner(self, infile, outfile=None, alter=False):
-            if not os.path.isfile(infile):
-                print("File not found:", infile)
-                return
-
-            self.infile = infile  # capture infile name incase outfile is not supplied
             name_of_f = f.__name__
-            mode = 'rb' if 'de' in name_of_f else 'r'
+            self._f = name_of_f
+            if not os.path.isfile(infile):
+                Error.display('NOFILE',infile)
+                return
             try:
-                with open(infile, mode) as inf:
-                    data = inf.read()
-                self._test_strain = data
-            except UnicodeDecodeError as e:
-                print('\t-- Seem like %s is already Encrypted' % infile)
+                self.infile = infile  # capture infile name incase outfile is not supplied
+                mode = self._test_mode(infile) # get file mode
+                data = self.read_file(infile,mode) # get data from file
+
+                # check for encryption stamp , exit if stamp found
+                if self._encryptorType(f.__name__):
+                    if self._found_stamp(data):
+                        Error.display('ENCRYPT',infile)
+                        return 
+                    # encypting we set the mode from read_file mode
+                    self._stamp =  'ENR' if mode == 'r' else 'ENB'
+                    self._mode  = 'wb'
+                # strip stamp from decryption data 
+                if not self._encryptorType(f.__name__):
+                    if  self._found_stamp(data):
+                        # decryption we get the mode from end of file  
+                        self._stamp = data[-3:]
+                        data = data[:-3]
+                        self._mode = 'wb' if self._stamp == b'ENB' else 'w'
+            except Exception as e:
+                print('HANDLER',e)
                 return
             return f(self, data, outfile, alter)
         return inner
@@ -90,7 +193,7 @@ class Encryptor():
             @@params: alter - "decrypt" or "encrypt" file name (see alter_name())
        """
         data = self._encrypt(infile)
-        self._write_output(data, outfile, mode=alter)
+        self._write_output(data, outfile, alter=alter)
 
 
     def _encrypt(self, data, add_padding=True):
@@ -101,11 +204,15 @@ class Encryptor():
             pad_size = 8
             padding = pad_size - (len(data) % pad_size)
             padding = (chr(padding)*padding).encode('ascii')
-            data = data.encode('utf-8')
+            try:
+                data = data.encode('utf-8')
+            except:
+                pass
             data = data + padding
             data = b"".join(self._cipher.encrypt_ecb(data))
+            data +=self._stamp.encode('ascii') # stamp the file 
         except Exception as e:
-            print("ERROR:", e)
+            pass
 
         if self._backup and self._backup != "not set":
             with open(self._backup, "a") as k:
@@ -122,8 +229,7 @@ class Encryptor():
             @@params: alter - "decrypt" or "encrypt" file name (see alter_name())
        """
         data = self._decrypt(infile)
-        self._write_output(data, outfile, mode=alter)
-
+        self._write_output(data, outfile, alter=alter)
 
     def _decrypt(self, data, remove_padding=True):
         if not data:
@@ -131,11 +237,12 @@ class Encryptor():
         try:
             self._type = 'Decryption'
             data = b"".join(self._cipher.decrypt_ecb(data))
-        except ValueError as e:
-            data = "".join(self._cipher.decrypt_ecb(data))
-        except:
-            print('\t-- Seem like %s is already Decrypted' % self.infile)
-            return
+        except Exception as e:
+            try:
+                data = ''.join(self._cipher.decrypt_ecb(data))
+            except Exception as e:
+                Error.display('DECRYPT',self.infile)
+                return
         try:
             if remove_padding:
                 pad_size = int(data[-1])
@@ -145,36 +252,57 @@ class Encryptor():
                     raise ValueError()
                 data = data[:-pad_size]
         except ValueError as e:
-            print('\n\t -- Invalid Decryption key --')
+            Error.display('KEY')
             return
-        return data.decode('utf-8')
+
+        if self._mode == 'wb': 
+            return data 
+        else:
+            return data.decode('utf-8')
 
 
-    def _write_output(self, data, outfile=None, mode=False):
-        """Creates an output file to save results"""
+    def _write_output(self, data, outfile=None, alter=False):
+        """Creates an output file to save IO data """
         # If user did not enter an outfile, then save copy of infile
         # and rename out_file -> infile
+        temp = '___temp___'
         if not data:
             return
-        if not outfile:
-            outfile = self.infile
-            print('\t-- Saving outfile as %s --' % outfile)
-        try:  # testing file written correctly
-            with open("___temp___", "w") as nf:
-                nf.write(data)
-                write_mode = "w"
-        except:
-            write_mode = "wb"
 
-        with open(outfile, write_mode) as nf:
-            nf.write(data)
-        os.remove("___temp___")
-        self.alter_name(outfile, mode)
-        print("Writing %s Done" % self._type)
+        if not outfile:
+            outfile = self.infile # overwrite infile 
+        if self._mode == 'unknown':
+            try:  # testing file written correctly
+                #   and returns the right IO mode to write file
+                with open(temp,"w") as nf:
+                    nf.write(data)
+                    write_mode = "w"
+            except Exception as e:
+                write_mode = "wb"
+            finally:
+                os.remove(temp)
+        else:
+            write_mode = self._mode
+
+        try: # Capture data and write to temp file
+             # !! Writing to tempfile incase error occur
+             # this way the corrupt data wont be overwrite infile
+            with open(temp, write_mode) as nf:
+                nf.write(data)
+        except Exception as e:
+            Error.display('WRITING',outfile)
+        else:
+            # if there is no error then, write to infile and remove tempfile
+            shutil.copyfile(temp,outfile)
+            sleep(.5)
+            self.alter_name(outfile, alter)
+            print("Writing %s Done" % self._type)
+        finally:
+            os.remove(temp)
 
 
     def alter_name(self, name, mode=False):
-        '''Encrypt or Decrypt file name '
+        '''Encrypt or Decrypt file name  '
            @@params:: name - input file to change name
            @@params:: mode - set mode to "decrypt" to decrypt file name 
                              set mode to "encrypt" to decrypt file name 
@@ -182,17 +310,16 @@ class Encryptor():
         '''
         self.infile = name
         if not mode or not isinstance(mode, str):
+            print('\t-- Saving outfile as %s --' % name)
             return
-
         path, _name = os.path.split(name)
         try:
             if mode.lower().strip() == 'encrypt':
                 result = base64.b16encode(self._encrypt(_name)).decode('ascii')
             else:
                 result = self._decrypt(base64.b16decode(
-                    _name.encode('ascii')))
+                    _name)[:-3]).decode()
         except Exception as e:
-            print(e)
             return
 
         try:
@@ -200,10 +327,11 @@ class Encryptor():
             shutil.copyfile(name, new_path)
             sleep(.5)
             os.remove(name)
-            print('New file:', new_path)
+            print('\t-- Saving outfile as %s --' % result)
             return result
         except Exception as e:
-            print('Error scrambling file name', e)
+            Error.display('ALTER',name)
+            print(e)
 
 
 def _check_len(key):
@@ -213,7 +341,7 @@ def _check_len(key):
 
     if lop < min_char or lop > max_char:
         e_msg = "too short" if lop < min_char else "too long"
-        print("\n-- Password is %s .. Try again --" % e_msg)
+        Error.display('PWD',e_msg)
         return False
     return True
 
@@ -221,7 +349,8 @@ def _check_len(key):
 def _verify(key):
     verify = getpass("verify password: ").strip()
     if verify != key:
-        print("\nPassword doesnt match.. Try again")
+        Error.display('NOMATCH')
+
         return False
     return True
 
@@ -230,7 +359,7 @@ def perfect_pwd(key=None, need_verify=True):
     global max_retry
     nv = need_verify
     if max_retry <= 0:
-        print("\nToo many Invalid password.. Goodbye")
+        Error.display('ATTEMPTS')
         sys.exit(0)
 
     if not key:
@@ -239,7 +368,7 @@ def perfect_pwd(key=None, need_verify=True):
             print("\nExiting...")
 
         if not key:
-            print("-- You must enter password --")
+            Error.display('NOPWD')
             max_retry -= 1
             return perfect_pwd(key=None, need_verify=nv)
 
@@ -283,8 +412,7 @@ def main():
         key = args.key
 
         if not encrypt and not decrypt:
-            print("\nInvalid Mode")
-            print('\t-- Please choose either decrypt or encrypt --')
+            Error.display('MODE')
             sys.exit(0)
 
         if folder:
@@ -299,7 +427,7 @@ def main():
                         infile = list(
                             filter(os.path.isfile, glob(dorf+'/*', recursive=True)))
                         if not infile:
-                            print("\n -- No files found in directory: %s --" % dorf)
+                            Error.display('FILE',infile)
                             return
                     except:
                         raise EncryptorError('Invalid Directory: %s' % infile)
@@ -307,11 +435,10 @@ def main():
                 elif os.path.isfile(dorf):
                     infile = [dorf]
                 else:
-                    msg = '\n\t-- Invalid file or folder: %s is not a folder --' % dorf
-                    print(msg)
+                    Error.display('DORF',dorf)
                     return
             else:
-                print('\n\t-- Invalid file name: %s --' % dorf)
+                Error.display('FNAME')
                 return
 
         if infile:
