@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3.8
 __author__ = "Cornelius Brooks"
 __created__ = "Oct 3, 2019"
 __description__ = "File encryptor/decryptor"
@@ -10,6 +11,7 @@ import subprocess
 import base64
 import argparse
 import shutil
+import threading
 from getpass import getpass
 from glob import glob
 from functools import wraps
@@ -458,10 +460,14 @@ def main():
             for x in infile:
                 if decrypt:
                     print('\nDecrypting %s ....' % x)
-                    TezCrypt.decrypt(x, outfile, alter)
+                    t = threading.Thread(target=TezCrypt.decrypt,
+                            args=(x, outfile, alter,),
+                            )
                 elif encrypt:
                     print('\nEncrypting %s ....' % x)
-                    TezCrypt.encrypt(x, outfile, alter)
+                    t = threading.Thread(target=TezCrypt.encrypt,
+                            args=(x, outfile, alter),
+                            )
         else:
             print('\n\t-- Must specify an input file to begin --')
             print(parser.print_help())
