@@ -18,7 +18,7 @@ Key must be 8 to 24 characters long
 - Symbols and numbers are supported
 - 8 to 24 characters long ( cmdline only)
 
-## -- Intialize
+## Initialize
 ```python
 mykey = "secretkey"
 crypt = Encryptor(key=mykey)
@@ -66,21 +66,10 @@ crypt.decrypt(infile=infile,alter='decrypt')
 
 
 # Cmdline
-#### Optional,but Not recommended
- ##### <sup>Save an environment variable named "MYCRYPT=path_to_recovery_file" for password recovery. This is optional, it save all password to a file in case user forgets encryption or decryption key.This is not recommended, because it can cause security risk if attacker find password.</sup>
-
 
 TezCrypt can also be used as a cmdline program.
-For linux distribution, it's best to save tezcrypt to /usr/bin/. Then add  a shebang line with your python executable path to the first line of "tezcrypt.py"
+For linux distribution, Use **tezcrypt** bash file instead of **tezcrypt.py**.
 
-If you are adding a shebang line, then  change "tezcrypt.py" to "tezcrypt"
-> change tezcrypt.py   -->   tezcrypt 
-
-If using python 3, then  python3 will be your python executable. Add either one below to the first line of "tezcrypy"
-
-> #!/usr/bin/env python 
-#### Or 
->#/usr/bin/python3 
 ## cmdline argument 
 
 ```bash
@@ -122,7 +111,7 @@ $ tezcrypt `infile.txt` -e -a  -k "mysecretkey"
 #To decrypt file and filename (overwrite infile, and convert filename back to original name)
 $ tezcrypt `infile.txt` -d -a  -k "mysecretkey"
 
-# If key(-k) not passed, user will be prompt for password
+# If argument "-k" not passed,then user will be prompt to enter password
 
 
 
