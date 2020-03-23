@@ -1,8 +1,8 @@
 TezCrypt
 ===========
 
-TezCrypt is a python program used to encrypt or decrypt files and folders. It can be used in python or as a cmdline program.
-TezCrypt support  python3.4+ and is compatible with windows and linux system.
+Tezcrypt is an AES encryption python program that can encrypt or decrypt files and folders. It can be used in python or as a cmdline program.
+TezCrypt support  python3+ and is compatible with windows and linux system.
 
 # How to use
 
@@ -55,7 +55,7 @@ crypt.encrypt(infile=your_file ,alter='encrypt')
 #"important.txt" overwritten to filename "437CE4CEBDF566845E60A9C00FD926C4"
 
 #Example : 4
-your_file = 437CE4CEBDF566845E60A9C00FD926C4'
+your_file = '437CE4CEBDF566845E60A9C00FD926C4'
 crypt.decrypt(infile=infile,alter='decrypt')
 #result: 'important.txt'
 # "filename "437CE4CEBDF566845E60A9C00FD926C4" is converted back to "important.txt"
