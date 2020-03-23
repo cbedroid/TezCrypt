@@ -14,6 +14,7 @@ from getpass import getpass
 from glob import glob
 from functools import wraps
 from platform import system
+import tempfile
 from time import sleep
 
 if system() == 'Windows':
@@ -64,7 +65,8 @@ class Encryptor():
         self._mode = 'unknown'
         self._backup = os.environ.get("MYCRYPT")
         self._cipher = blowfish.Cipher(key.encode("ascii"))
-        
+        self.temp = tempfile.NamedTemporaryFile(suffix='_tezcrypt',delete=False).name
+
 
     @property
     def key(self):
@@ -106,6 +108,7 @@ class Encryptor():
         ''' Read infile and return it data '''
         with open(file,mode) as r:
             return r.read()
+
 
     @staticmethod
     def _test_mode(file=None):
@@ -265,7 +268,6 @@ class Encryptor():
         """Creates an output file to save IO data """
         # If user did not enter an outfile, then save copy of infile
         # and rename out_file -> infile
-        temp = '___temp___'
         if not data:
             return
 
@@ -274,31 +276,31 @@ class Encryptor():
         if self._mode == 'unknown':
             try:  # testing file written correctly
                 #   and returns the right IO mode to write file
-                with open(temp,"w") as nf:
+                with open(self.temp,"w") as nf:
                     nf.write(data)
                     write_mode = "w"
             except Exception as e:
                 write_mode = "wb"
             finally:
-                os.remove(temp)
+                os.remove(self.temp)
         else:
             write_mode = self._mode
 
-        try: # Capture data and write to temp file
+        try: # Capture data and write to self.temp file
              # !! Writing to tempfile incase error occur
              # this way the corrupt data wont be overwrite infile
-            with open(temp, write_mode) as nf:
+            with open(self.temp, write_mode) as nf:
                 nf.write(data)
         except Exception as e:
             Error.display('WRITING',outfile)
         else:
             # if there is no error then, write to infile and remove tempfile
-            shutil.copyfile(temp,outfile)
+            shutil.copyfile(self.temp,outfile)
             sleep(.5)
             self.alter_name(outfile, alter)
             print("Writing %s Done" % self._type)
         finally:
-            os.remove(temp)
+            os.remove(self.temp)
 
 
     def alter_name(self, name, mode=False):
