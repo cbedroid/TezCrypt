@@ -97,7 +97,7 @@ optional arguments:
 
 FOR PRIVACY 
 # Avoid using argument "-k --key" to protect secret password from others!
-# If argument "-k" not passed, then the user will be prompt to enter password. 
+# If argument "-k" is not passed, then the user will be prompt to enter password. 
 
 #To encrypt (Warning! filename will be overwritten)
 $ tezcrypt <filename> -e  -k <secret_password>
