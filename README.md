@@ -105,11 +105,11 @@ $ tezcrypt <filename> -e  -k <secret_password>
 #To decrypt (overwrite infile)
 $ tezcrypt <filename>  -d  -k <secret_password>
 
-#To encrypt to another file
-$ tezcrypt <filename> -e -o "newfile.txt" -k <secret_password>
+#To encrypt and save to another file
+$ tezcrypt <filename> -e -o "<path_to_file> -k <secret_password>
 
-#To decrypt to another file
-$ tezcrypt <filename>  -d  -o "newfile.txt" -k <secret_password>
+#To decrypt and save to another file
+$ tezcrypt <filename>  -d  -o <path_to__file> -k <secret_password>
 
 #To encrypt file content and filename (Warning! filename will be overwritten)
 $ tezcrypt <filename>  -e -a  -k <secret_password>
