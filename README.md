@@ -106,7 +106,7 @@ $ tezcrypt <filename> -e  -k <secret_password>
 $ tezcrypt <filename>  -d  -k <secret_password>
 
 #To encrypt and save to another file
-$ tezcrypt <filename> -e -o "<path_to_file> -k <secret_password>
+$ tezcrypt <filename> -e -o <path_to_file> -k <secret_password>
 
 #To decrypt and save to another file
 $ tezcrypt <filename>  -d  -o <path_to__file> -k <secret_password>
