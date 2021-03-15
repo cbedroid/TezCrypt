@@ -26,6 +26,7 @@ crypt = Encryptor(key=mykey)
 
 Once initialized,  method `encrypt()` or `decrypt()` can be called with parameters  'infile' , 'outfile',and  'alter'.
 The `infile` argument is the name of the file you want to decrypt or encrypt. It must be called (required). The `outfile` argument is optional.It is the name of the file you want save the results. `alter` is also optional, alter argument decrypt or encrypt file name. There are 3 option to pass to alter: 'decrypt','encrypt', False. It is set to False by default.
+
 #### Warning: If the outfile is Not supplied, the infile will be overwritten!
 - infile   -  input file to encrypt or decrypt 
 - outfile  -  output file to save the results 
@@ -72,7 +73,7 @@ For linux distribution, Use **tezcrypt** bash file instead of **tezcrypt.py**.
 
 ## cmdline argument 
 
-```bash
+```
 
 usage: tezcrypt.py [-h] [-o OUTFILE] [-k KEY] [-f] [-a] (-e | -d) infile
 
@@ -93,27 +94,28 @@ optional arguments:
 
 ## cmdline usage 
 ```bash
-#To encrypt (overwrite infile)
-$ tezcrypt `infile.txt` -e  -k "mysecretkey"
+
+FOR PRIVACY 
+# Avoid using argument "-k --key" to protect secret password from others!
+# If argument "-k" not passed, then the user will be prompt to enter password. 
+
+#To encrypt (Warning! filename will be overwritten)
+$ tezcrypt <filename> -e  -k <secret_password>
 
 #To decrypt (overwrite infile)
-$ tezcrypt `infile.txt` -d  -k "mysecretkey"
+$ tezcrypt <filename>  -d  -k <secret_password>
 
 #To encrypt to another file
-$ tezcrypt `infile.txt` -e -o "newfile.txt" -k "mysecretkey"
+$ tezcrypt <filename> -e -o "newfile.txt" -k <secret_password>
 
 #To decrypt to another file
-$ tezcrypt `infile.txt` -d  -o "newfile.txt" -k "mysecretkey"
+$ tezcrypt <filename>  -d  -o "newfile.txt" -k <secret_password>
 
-#To encrypt file and filename (overwrite infile)
-$ tezcrypt `infile.txt` -e -a  -k "mysecretkey"
+#To encrypt file content and filename (Warning! filename will be overwritten)
+$ tezcrypt <filename>  -e -a  -k <secret_password>
 
-#To decrypt file and filename (overwrite infile, and convert filename back to original name)
-$ tezcrypt `infile.txt` -d -a  -k "mysecretkey"
-
-# If argument "-k" not passed,then user will be prompt to enter password
-
-
+#To decrypt file content and filename (overwrite infile, and convert filename back to original name)
+$ tezcrypt <filename>  -d -a  -k <secret_password>
 
 
 ```
